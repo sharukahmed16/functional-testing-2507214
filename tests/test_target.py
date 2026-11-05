@@ -749,7 +749,3 @@ def test_average_empty_raises(empty):
 def test_average_wrong_type_raises(bad):
     with pytest.raises(TypeError):
         target.average(bad)
-
-
-def test_deliberate_failure():
-    assert target.is_adult(17) is True

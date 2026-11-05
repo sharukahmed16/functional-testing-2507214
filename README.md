@@ -1,6 +1,6 @@
 # functional-testing-2507214
 
-![CI](https://github.com/YOUR_GITHUB_USERNAME/functional-testing-2507214/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/sharukahmed16/functional-testing-2507214/actions/workflows/ci.yml/badge.svg)
 
 Functional tests, CI/CD and live deployment for `target.py` (16 functions).
 Course: Software Quality Assurance, MIT. Author: Sakib (2507214).
@@ -24,7 +24,7 @@ Course: Software Quality Assurance, MIT. Author: Sakib (2507214).
 ## Setup
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/functional-testing-2507214.git
+git clone https://github.com/sharukahmed16/functional-testing-2507214.git
 cd functional-testing-2507214
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate

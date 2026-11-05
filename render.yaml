@@ -1,0 +1,10 @@
+# Optional Render Blueprint. You can also create the service by hand in the dashboard.
+services:
+  - type: web
+    name: functional-testing
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    autoDeployTrigger: "off"
+    healthCheckPath: /health

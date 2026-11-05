@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>target.py Test Bench</title>
+<style>
+  :root {
+    --paper: #eef1f4;
+    --panel: #ffffff;
+    --ink: #1b2430;
+    --muted: #5b6776;
+    --line: #cfd6de;
+    --accent: #2447b8;
+    --accent-ink: #ffffff;
+    --pass: #17663f;
+    --pass-bg: #e3f3ea;
+    --fail: #a52a1d;
+    --fail-bg: #fbe9e6;
+    --warn: #8a5a00;
+    --warn-bg: #fff3d6;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #12171e;
+      --panel: #1a212b;
+      --ink: #e6ebf1;
+      --muted: #9aa6b5;
+      --line: #2e3947;
+      --accent: #7a9bff;
+      --accent-ink: #0d1320;
+      --pass: #6fd49b;
+      --pass-bg: #14301f;
+      --fail: #ff9d8f;
+      --fail-bg: #3a1a16;
+      --warn: #f0c36a;
+      --warn-bg: #33270d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  header h1 { margin: 0; font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; }
+  header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+  code, .mono { font-family: var(--mono); }
+  .shell {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 0;
+    min-height: 0;
+  }
+  nav {
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    padding: 12px 0 24px;
+    overflow-y: auto;
+  }
+  nav h2 {
+    margin: 14px 20px 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  nav ul { list-style: none; margin: 0; padding: 0; }
+  nav button.fn {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+  }
+  nav button.fn small { font-family: var(--sans); color: var(--muted); font-size: 0.78rem; }
+  nav button.fn:hover { background: var(--paper); }
+  nav button.fn[aria-current="true"] {
+    border-left-color: var(--accent);
+    background: var(--paper);
+    font-weight: 650;
+  }
+  nav button.fn:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  main { padding: 24px; min-width: 0; }
+  .bench { max-width: 860px; }
+  .bench h2 { margin: 0; font-family: var(--mono); font-size: 1.6rem; font-weight: 650; }
+  .kind { color: var(--muted); margin: 2px 0 12px; }
+  .spec { margin: 0 0 20px; max-width: 65ch; }
+  .fields { display: grid; gap: 12px; margin-bottom: 14px; }
+  label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.92rem; }
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    font-family: var(--mono);
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 16px; max-width: 70ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  button.run {
+    font: inherit;
+    font-weight: 650;
+    padding: 10px 22px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+  }
+  button.run:disabled { opacity: 0.6; cursor: progress; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .examples span { color: var(--muted); font-size: 0.9rem; align-self: center; }
+  button.chip {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button.chip:hover { border-color: var(--accent); }
+  .verdict {
+    border: 1px solid var(--line);
+    border-left-width: 6px;
+    border-radius: 6px;
+    padding: 14px 16px;
+    background: var(--panel);
+    min-height: 92px;
+  }
+  .verdict.empty { color: var(--muted); border-left-color: var(--line); }
+  .verdict.ok { border-left-color: var(--pass); background: var(--pass-bg); }
+  .verdict.error { border-left-color: var(--fail); background: var(--fail-bg); }
+  .verdict.limit { border-left-color: var(--warn); background: var(--warn-bg); }
+  .verdict .call { font-family: var(--mono); font-size: 0.9rem; color: var(--muted); word-break: break-all; }
+  .verdict .outcome { font-family: var(--mono); font-size: 1.35rem; font-weight: 650; margin: 4px 0 0; word-break: break-all; }
+  .verdict.ok .outcome { color: var(--pass); }
+  .verdict.error .outcome { color: var(--fail); }
+  .verdict.limit .outcome { color: var(--warn); }
+  .verdict .detail { margin: 2px 0 0; }
+  h3 { font-size: 1rem; margin: 28px 0 8px; }
+  .log { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .log th, .log td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .log td { font-family: var(--mono); word-break: break-all; }
+  .log td.ok { color: var(--pass); }
+  .log td.error { color: var(--fail); }
+  .log td.limit { color: var(--warn); }
+  .log-empty { color: var(--muted); }
+  footer {
+    padding: 12px 24px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    justify-content: space-between;
+  }
+  footer .sha { font-family: var(--mono); color: var(--ink); }
+  @media (max-width: 760px) {
+    .shell { grid-template-columns: 1fr; }
+    nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
+    main { padding: 16px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .verdict { transition: background-color 0.2s, border-color 0.2s; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>target.py test bench</h1>
+  <p>Pick one of the 16 functions, type its inputs and run it. You see either the value it returns or the exception it raises.</p>
+</header>
+
+<div class="shell">
+  <nav id="menu" aria-label="Functions"></nav>
+  <main>
+    <section class="bench" id="bench" aria-live="polite"></section>
+  </main>
+</div>
+
+<footer>
+  <span>Deployed commit: <span class="sha" id="sha">checking&hellip;</span></span>
+  <span id="health">Server status: checking&hellip;</span>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var functions = [];
+  var current = null;
+  var history = [];
+
+  var menu = document.getElementById("menu");
+  var bench = document.getElementById("bench");
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (key) {
+      if (key === "text") { node.textContent = attrs[key]; }
+      else if (key === "class") { node.className = attrs[key]; }
+      else { node.setAttribute(key, attrs[key]); }
+    });
+    (children || []).forEach(function (child) { node.appendChild(child); });
+    return node;
+  }
+
+  function loadHealth() {
+    fetch("/health")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        document.getElementById("sha").textContent = data.sha;
+        document.getElementById("health").textContent = "Server status: " + data.status;
+      })
+      .catch(function () {
+        document.getElementById("sha").textContent = "unavailable";
+        document.getElementById("health").textContent = "Server status: not reachable";
+      });
+  }
+
+  function buildMenu() {
+    menu.textContent = "";
+    var groups = {};
+    functions.forEach(function (fn) {
+      (groups[fn.group] = groups[fn.group] || []).push(fn);
+    });
+    Object.keys(groups).forEach(function (group) {
+      menu.appendChild(el("h2", { text: group }));
+      var list = el("ul");
+      groups[group].forEach(function (fn) {
+        var button = el("button", { "class": "fn", type: "button", "data-name": fn.name }, [
+          el("span", { text: fn.name }),
+          el("small", { text: fn.type })
+        ]);
+        button.addEventListener("click", function () { select(fn.name); });
+        list.appendChild(el("li", {}, [button]));
+      });
+      menu.appendChild(list);
+    });
+  }
+
+  function markCurrent() {
+    Array.prototype.forEach.call(menu.querySelectorAll("button.fn"), function (button) {
+      button.setAttribute("aria-current", button.getAttribute("data-name") === current.name ? "true" : "false");
+    });
+  }
+
+  function select(name) {
+    current = functions.filter(function (fn) { return fn.name === name; })[0];
+    markCurrent();
+    renderBench();
+    if (location.hash !== "#" + name) { history_replace(name); }
+  }
+
+  function history_replace(name) {
+    try { window.history.replaceState(null, "", "#" + name); } catch (e) { /* ignore */ }
+  }
+
+  function renderBench() {
+    var fn = current;
+    bench.textContent = "";
+    bench.appendChild(el("h2", { text: fn.name + "(" + fn.params.join(", ") + ")" }));
+    bench.appendChild(el("p", { "class": "kind", text: fn.type + " function" }));
+    bench.appendChild(el("p", { "class": "spec", text: fn.spec }));
+
+    var fields = el("div", { "class": "fields" });
+    var inputs = fn.params.map(function (param, index) {
+      var id = "in-" + index;
+      var input = el("input", { type: "text", id: id, autocomplete: "off", spellcheck: "false" });
+      fields.appendChild(el("div", {}, [el("label", { "for": id, text: param }), input]));
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") { run(); }
+      });
+      return input;
+    });
+    bench.appendChild(fields);
+    bench.appendChild(el("p", { "class": "hint",
+      text: "Type numbers as 18 or 3.5, text as \"hello\", true, false, null (None), or lists like [1, 2, 3]. Text without quotes also works as a string." }));
+
+    var runButton = el("button", { "class": "run", type: "button", text: "Run " + fn.name });
+    bench.appendChild(el("div", { "class": "actions" }, [runButton]));
+
+    var examples = el("div", { "class": "examples" }, [el("span", { text: "Try:" })]);
+    fn.examples.forEach(function (example) {
+      var chip = el("button", { "class": "chip", type: "button", text: example.label });
+      chip.addEventListener("click", function () {
+        inputs.forEach(function (input, i) { input.value = example.inputs[i]; });
+        run();
+      });
+      examples.appendChild(chip);
+    });
+    bench.appendChild(examples);
+
+    var verdict = el("div", { "class": "verdict empty", id: "verdict" });
+    verdict.appendChild(el("p", { "class": "detail", text: "Run the function to see its result here." }));
+    bench.appendChild(verdict);
+
+    bench.appendChild(el("h3", { text: "Runs in this session" }));
+    bench.appendChild(el("div", { id: "log" }));
+    renderLog();
+
+    runButton.addEventListener("click", run);
+
+    function run() {
+      var values = inputs.map(function (input) { return input.value; });
+      runButton.disabled = true;
+      fetch("/api/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ "function": fn.name, inputs: values })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { showResult(data); })
+        .catch(function () {
+          showResult({ ok: false, error_type: "NetworkError", message: "Could not reach the server. Check your connection and run again." });
+        })
+        .then(function () { runButton.disabled = false; });
+    }
+  }
+
+  function showResult(data) {
+    var verdict = document.getElementById("verdict");
+    var kind = data.ok ? "ok" : (data.error_type === "DemoLimit" ? "limit" : "error");
+    verdict.className = "verdict " + kind;
+    verdict.textContent = "";
+    if (data.call) { verdict.appendChild(el("div", { "class": "call", text: data.call })); }
+    if (data.ok) {
+      verdict.appendChild(el("div", { "class": "outcome", text: "returned " + data.result }));
+      verdict.appendChild(el("p", { "class": "detail", text: "Result type: " + data.result_type }));
+    } else {
+      verdict.appendChild(el("div", { "class": "outcome", text: "raised " + data.error_type }));
+      verdict.appendChild(el("p", { "class": "detail", text: data.message || "No message" }));
+    }
+    history.unshift({
+      call: data.call || (current.name + "(...)"),
+      kind: kind,
+      text: data.ok ? data.result + " (" + data.result_type + ")" : data.error_type + ": " + (data.message || "")
+    });
+    history = history.slice(0, 12);
+    renderLog();
+  }
+
+  function renderLog() {
+    var holder = document.getElementById("log");
+    if (!holder) { return; }
+    holder.textContent = "";
+    if (history.length === 0) {
+      holder.appendChild(el("p", { "class": "log-empty", text: "Nothing yet. Pick an example above or type your own inputs." }));
+      return;
+    }
+    var table = el("table", { "class": "log" });
+    table.appendChild(el("thead", {}, [el("tr", {}, [
+      el("th", { text: "Call" }), el("th", { text: "Outcome" })
+    ])]));
+    var body = el("tbody");
+    history.forEach(function (row) {
+      body.appendChild(el("tr", {}, [
+        el("td", { text: row.call }),
+        el("td", { "class": row.kind, text: row.text })
+      ]));
+    });
+    table.appendChild(body);
+    holder.appendChild(table);
+  }
+
+  fetch("/api/functions")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      functions = data.functions;
+      buildMenu();
+      var wanted = location.hash.replace("#", "");
+      var exists = functions.some(function (fn) { return fn.name === wanted; });
+      select(exists ? wanted : functions[0].name);
+    })
+    .catch(function () {
+      bench.textContent = "";
+      bench.appendChild(el("p", { text: "The function list could not be loaded. Reload the page to try again." }));
+    });
+
+  loadHealth();
+})();
+</script>
+</body>
+</html>

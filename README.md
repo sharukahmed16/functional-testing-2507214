@@ -7,7 +7,7 @@ Course: Software Quality Assurance, MIT. Author: Sakib (2507214).
 
 - **Live site:** https://functional-testing-2507214.onrender.com
 - **Health check (shows deployed commit SHA):** https://functional-testing-2507214.onrender.com/health
-- **Demo video:** PASTE_YOUR_VIDEO_LINK_HERE
+- **Demo video:** https://youtu.be/clMFDN3tajI
 
 ## What is in this repository
 

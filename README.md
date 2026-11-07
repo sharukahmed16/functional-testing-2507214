@@ -5,9 +5,9 @@
 Functional tests, CI/CD and live deployment for `target.py` (16 functions).
 Course: Software Quality Assurance, MIT. Author: Sakib (2507214).
 
-- **Live site:** https://YOUR-APP.onrender.com
-- **Health check (shows deployed commit SHA):** https://YOUR-APP.onrender.com/health
-- **Demo video:** DEMO_VIDEO_LINK
+- **Live site:** https://functional-testing-2507214.onrender.com
+- **Health check (shows deployed commit SHA):** https://functional-testing-2507214.onrender.com/health
+- **Demo video:** https://youtu.be/clMFDN3tajI
 
 ## What is in this repository
 
@@ -81,7 +81,7 @@ Required repository secrets (Settings, Secrets and variables, Actions):
 | Secret | Value |
 |--------|-------|
 | `RENDER_DEPLOY_HOOK_URL` | Deploy hook URL from the Render service settings |
-| `LIVE_URL` | Public URL of the site, for example `https://YOUR-APP.onrender.com` |
+| `LIVE_URL` | Public URL of the site, for example `https://functional-testing-2507214.onrender.com` |
 
 ## Suspected bugs in target.py
 
